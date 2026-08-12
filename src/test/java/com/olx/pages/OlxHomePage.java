@@ -2,6 +2,9 @@ package com.olx.pages;
 
 import com.olx.utils.DriverManager;
 import org.openqa.selenium.By;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 public class OlxHomePage extends BasePage {
 
@@ -15,15 +18,14 @@ public class OlxHomePage extends BasePage {
 
     public void navigateTo(String url) {
         driver.get(url);
-        wait.until(d -> "complete".equals(
-                ((org.openqa.selenium.JavascriptExecutor) d).executeScript("return document.readyState")));
     }
 
     public void clickVehiclesImage() {
         String urlBeforeClick = driver.getCurrentUrl();
         clickUnique(vehiclesImage, vehiclesLinkByHref, vehiclesTextFallback);
         try {
-            wait.until(d -> !d.getCurrentUrl().equals(urlBeforeClick));
+            new WebDriverWait(driver, Duration.ofSeconds(1))
+                    .until(d -> !d.getCurrentUrl().equals(urlBeforeClick));
         } catch (org.openqa.selenium.TimeoutException ignored) {
             // Some OLX layouts update results on-page; keep going with resilient locators.
         }

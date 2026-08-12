@@ -1,5 +1,6 @@
 package com.olx.pages;
 
+import com.olx.utils.ConfigurationManager;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -16,7 +17,18 @@ public abstract class BasePage {
 
     protected BasePage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(20)); // Increased wait time for potentially slow pages
+        long explicitWaitSeconds = parsePositiveLong(ConfigurationManager.getProperty("explicit.wait.seconds"), 4);
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(explicitWaitSeconds));
+        this.wait.pollingEvery(Duration.ofMillis(200));
+    }
+
+    private long parsePositiveLong(String value, long defaultValue) {
+        try {
+            long parsed = Long.parseLong(value);
+            return parsed > 0 ? parsed : defaultValue;
+        } catch (Exception ignored) {
+            return defaultValue;
+        }
     }
 
     private WebElement resolveOrNull(By... ranked) {

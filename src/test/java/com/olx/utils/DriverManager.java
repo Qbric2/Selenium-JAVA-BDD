@@ -5,8 +5,11 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.PageLoadStrategy;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DriverManager {
 
@@ -24,21 +27,28 @@ public class DriverManager {
         if (browser == null || browser.isEmpty() || "chrome".equalsIgnoreCase(browser)) {
             WebDriverManager.chromedriver().setup();
             ChromeOptions options = new ChromeOptions();
+            options.setPageLoadStrategy(PageLoadStrategy.NONE);
+            Map<String, Object> prefs = new HashMap<>();
+            prefs.put("profile.default_content_setting_values.images", 2);
+            options.setExperimentalOption("prefs", prefs);
             options.addArguments(
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
                     "--window-size=1920,1080",
                     "--remote-allow-origins=*",
                     "--disable-gpu",
+                    "--disable-extensions",
+                    "--disable-notifications",
                     "--disable-blink-features=AutomationControlled"
             );
             if (Boolean.parseBoolean(ConfigurationManager.getProperty("headless"))) {
                 options.addArguments("--headless=new");
             }
             driver = new ChromeDriver(options);
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-            driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
-            driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(30));
+            // Keep implicit wait at zero to avoid multiplying delays with layered explicit waits.
+            driver.manage().timeouts().implicitlyWait(Duration.ZERO);
+            driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(10));
+            driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(5));
         } else if ("firefox".equalsIgnoreCase(browser)) {
             WebDriverManager.firefoxdriver().setup();
             driver = new FirefoxDriver();
