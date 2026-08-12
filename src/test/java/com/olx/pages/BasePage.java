@@ -57,12 +57,37 @@ public abstract class BasePage {
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
     }
 
+    private void dismissCommonPopups() {
+        By[] popupClosers = new By[] {
+            By.id("onetrust-accept-btn-handler"),
+            By.xpath("//button[contains(translate(normalize-space(.), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'accept all')]"),
+            By.xpath("//button[contains(translate(normalize-space(.), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'accept')]"),
+            By.xpath("//button[@aria-label='Close']")
+        };
+
+        for (By closer : popupClosers) {
+            try {
+                for (WebElement button : driver.findElements(closer)) {
+                    if (button.isDisplayed()) {
+                        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", button);
+                        return;
+                    }
+                }
+            } catch (org.openqa.selenium.WebDriverException ignored) {
+                // Ignore transient popup race conditions and continue.
+            }
+        }
+    }
+
     protected void clickUnique(By... ranked) {
+        dismissCommonPopups();
         WebElement el = resolveVisible(ranked);
         scrollIntoView(el);
         try {
             wait.until(ExpectedConditions.elementToBeClickable(el)).click();
         } catch (org.openqa.selenium.ElementClickInterceptedException | org.openqa.selenium.TimeoutException intercepted) {
+            dismissCommonPopups();
+            wait.until(ExpectedConditions.visibilityOf(el));
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
         }
     }
